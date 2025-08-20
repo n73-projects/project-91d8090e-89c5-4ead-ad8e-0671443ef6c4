@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TreeNode } from '../types/TreeNode';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 
 interface TreeVisualizationProps {}
 
@@ -57,7 +56,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
 
     if (!tree) {
       const newTree = new TreeNode(value);
-      newTree.calculatePositions();
+      newTree.calculatePositions(dimensions.width / 2, 80, dimensions.width / 8);
       setTree(newTree);
       addAnimationLog(`Created root node with value: ${value}`);
     } else {
@@ -406,58 +405,56 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
         
         {/* Control panel */}
         <div className="w-80 bg-white shadow-lg border-l flex flex-col">
-          {/* Input Controls */}
-          <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              🎯 Tree Operations
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Enter a number to insert or search:
-                </label>
-                <Input
-                  type="number"
-                  placeholder="e.g., 42"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleInsert();
-                    }
-                  }}
-                  disabled={isAnimating}
-                  className="w-full text-lg py-3 border-2 border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                />
-              </div>
-              <div className="grid grid-cols-1 gap-3">
+          {/* INPUT SECTION - SUPER VISIBLE */}
+          <div className="p-6 border-b-4 border-red-300 bg-gradient-to-r from-red-50 to-pink-50">
+            <div className="bg-red-100 border-2 border-red-400 rounded-lg p-4 mb-4">
+              <h2 className="text-2xl font-bold text-red-800 mb-2 text-center animate-bounce">
+                ⭐ INPUT FIELD HERE! ⭐
+              </h2>
+              <p className="text-red-600 text-center font-semibold">👇 Type a number below 👇</p>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg border-4 border-blue-500 shadow-xl">
+              <label className="block text-xl font-bold text-blue-700 mb-3 text-center">
+                📝 ENTER NUMBER:
+              </label>
+              <input
+                type="number"
+                placeholder="Type here (e.g., 42)"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleInsert();
+                  }
+                }}
+                disabled={isAnimating}
+                className="w-full text-2xl py-4 px-4 border-4 border-blue-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-300 rounded-lg focus:outline-none disabled:opacity-50 bg-yellow-50 font-bold text-center shadow-lg"
+                style={{ minHeight: '70px' }}
+              />
+              <div className="grid grid-cols-1 gap-3 mt-4">
                 <Button
                   onClick={handleInsert}
                   disabled={isAnimating || !inputValue}
                   variant="default"
-                  className="w-full font-semibold py-3 text-lg bg-blue-600 hover:bg-blue-700"
+                  className="w-full font-bold py-4 text-xl bg-green-600 hover:bg-green-700 text-white"
                 >
-                  ➕ Insert Node
+                  ➕ INSERT NUMBER
                 </Button>
                 <Button
                   onClick={handleSearch}
                   disabled={isAnimating || !inputValue || !tree}
                   variant="secondary"
-                  className="w-full font-semibold py-3 text-lg"
+                  className="w-full font-bold py-4 text-xl"
                 >
-                  🔍 Search Node
+                  🔍 SEARCH NUMBER
                 </Button>
               </div>
               {isAnimating && (
-                <div className="text-center p-3 bg-blue-100 rounded-lg">
-                  <div className="text-blue-600 font-medium animate-pulse">
-                    🤖 Processing algorithm...
+                <div className="text-center p-3 bg-blue-100 rounded-lg mt-3">
+                  <div className="text-blue-600 font-bold animate-pulse text-lg">
+                    🤖 Processing...
                   </div>
-                </div>
-              )}
-              {!inputValue && !isAnimating && (
-                <div className="text-center text-sm text-gray-500 italic">
-                  💡 Enter a number above to get started
                 </div>
               )}
             </div>
@@ -465,7 +462,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
           
           {/* Quick Actions */}
           <div className="p-4 border-b bg-green-50">
-            <h3 className="text-md font-semibold text-gray-700 mb-3">⚡ Quick Actions</h3>
+            <h3 className="text-md font-semibold text-gray-700 mb-3">⚡ Quick Add</h3>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 onClick={() => {
@@ -551,7 +548,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
           
           {/* Utility Section */}
           <div className="p-4 border-b">
-            <h3 className="text-md font-semibold text-gray-700 mb-3">Utilities</h3>
+            <h3 className="text-md font-semibold text-gray-700 mb-3">🛠️ Utilities</h3>
             <div className="space-y-2">
               <Button
                 onClick={clearHighlights}
@@ -574,7 +571,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
 
           {/* Legend */}
           <div className="p-4 border-b">
-            <h3 className="text-md font-semibold text-gray-700 mb-3">Legend</h3>
+            <h3 className="text-md font-semibold text-gray-700 mb-3">🎨 Legend</h3>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
@@ -597,11 +594,11 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
 
           {/* Algorithm Log */}
           <div className="flex-1 p-4">
-            <h3 className="text-md font-semibold text-gray-700 mb-3">Algorithm Log</h3>
+            <h3 className="text-md font-semibold text-gray-700 mb-3">📋 Algorithm Log</h3>
             <div className="space-y-1 max-h-40 overflow-y-auto bg-gray-50 p-3 rounded border text-xs">
               {animationLog.length === 0 ? (
                 <p className="text-gray-500">
-                  Perform operations to see algorithm steps...
+                  Use the input field above to see algorithm steps...
                 </p>
               ) : (
                 animationLog.map((log, index) => (
