@@ -405,56 +405,51 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
         
         {/* Control panel */}
         <div className="w-80 bg-white shadow-lg border-l flex flex-col">
-          {/* INPUT SECTION - SUPER VISIBLE */}
-          <div className="p-6 border-b-4 border-red-300 bg-gradient-to-r from-red-50 to-pink-50">
-            <div className="bg-red-100 border-2 border-red-400 rounded-lg p-4 mb-4">
-              <h2 className="text-2xl font-bold text-red-800 mb-2 text-center animate-bounce">
-                ⭐ INPUT FIELD HERE! ⭐
-              </h2>
-              <p className="text-red-600 text-center font-semibold">👇 Type a number below 👇</p>
-            </div>
-            
-            <div className="bg-white p-4 rounded-lg border-4 border-blue-500 shadow-xl">
-              <label className="block text-xl font-bold text-blue-700 mb-3 text-center">
-                📝 ENTER NUMBER:
-              </label>
-              <input
-                type="number"
-                placeholder="Type here (e.g., 42)"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    handleInsert();
-                  }
-                }}
-                disabled={isAnimating}
-                className="w-full text-2xl py-4 px-4 border-4 border-blue-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-300 rounded-lg focus:outline-none disabled:opacity-50 bg-yellow-50 font-bold text-center shadow-lg"
-                style={{ minHeight: '70px' }}
-              />
-              <div className="grid grid-cols-1 gap-3 mt-4">
+          {/* Input Section */}
+          <div className="p-6 border-b bg-blue-50">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+              Add Node
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Enter a number:
+                </label>
+                <input
+                  type="number"
+                  placeholder="e.g., 42"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleInsert();
+                    }
+                  }}
+                  disabled={isAnimating}
+                  className="w-full text-lg py-3 px-4 border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-md focus:outline-none disabled:opacity-50 bg-white"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <Button
                   onClick={handleInsert}
                   disabled={isAnimating || !inputValue}
                   variant="default"
-                  className="w-full font-bold py-4 text-xl bg-green-600 hover:bg-green-700 text-white"
+                  className="w-full"
                 >
-                  ➕ INSERT NUMBER
+                  Insert
                 </Button>
                 <Button
                   onClick={handleSearch}
                   disabled={isAnimating || !inputValue || !tree}
                   variant="secondary"
-                  className="w-full font-bold py-4 text-xl"
+                  className="w-full"
                 >
-                  🔍 SEARCH NUMBER
+                  Search
                 </Button>
               </div>
               {isAnimating && (
-                <div className="text-center p-3 bg-blue-100 rounded-lg mt-3">
-                  <div className="text-blue-600 font-bold animate-pulse text-lg">
-                    🤖 Processing...
-                  </div>
+                <div className="text-center text-sm text-blue-600 animate-pulse">
+                  Processing...
                 </div>
               )}
             </div>
