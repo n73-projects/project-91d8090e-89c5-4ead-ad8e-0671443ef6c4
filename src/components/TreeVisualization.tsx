@@ -406,18 +406,18 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
         {/* Control panel */}
         <div className="w-80 bg-white shadow-lg border-l flex flex-col">
           {/* Input Section */}
-          <div className="p-6 border-b bg-blue-50">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
-              Add Node
+          <div className="p-6 border-b bg-gradient-to-r from-blue-100 to-indigo-100 border-2 border-blue-300">
+            <h2 className="text-xl font-bold text-blue-800 mb-4 text-center">
+              🔢 Add Numbers to Tree
             </h2>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Enter a number:
+              <div className="bg-white p-4 rounded-lg shadow-md border-2 border-blue-200">
+                <label className="block text-lg font-semibold text-gray-800 mb-3 text-center">
+                  Type a number here:
                 </label>
                 <input
                   type="number"
-                  placeholder="e.g., 42"
+                  placeholder="Enter any number..."
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={(e) => {
@@ -426,25 +426,29 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
                     }
                   }}
                   disabled={isAnimating}
-                  className="w-full text-lg py-3 px-4 border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-md focus:outline-none disabled:opacity-50 bg-white"
+                  className="w-full text-xl py-4 px-4 border-3 border-blue-400 focus:border-blue-600 focus:ring-3 focus:ring-blue-300 rounded-lg focus:outline-none disabled:opacity-50 bg-white text-center font-semibold shadow-inner"
+                  style={{ fontSize: '20px', minHeight: '60px' }}
                 />
+                <p className="text-sm text-gray-600 mt-2 text-center">
+                  Press Enter or click Insert to add the number
+                </p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-3">
                 <Button
                   onClick={handleInsert}
                   disabled={isAnimating || !inputValue}
                   variant="default"
-                  className="w-full"
+                  className="w-full py-3 text-lg font-semibold bg-green-600 hover:bg-green-700"
                 >
-                  Insert
+                  ➕ Insert Number
                 </Button>
                 <Button
                   onClick={handleSearch}
                   disabled={isAnimating || !inputValue || !tree}
                   variant="secondary"
-                  className="w-full"
+                  className="w-full py-3 text-lg font-semibold"
                 >
-                  Search
+                  🔍 Search Number
                 </Button>
               </div>
               {isAnimating && (
