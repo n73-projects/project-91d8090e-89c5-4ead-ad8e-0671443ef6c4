@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { TreeNode } from '../types/TreeNode';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 interface TreeVisualizationProps {}
 
@@ -11,6 +10,20 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
   const [inputValue, setInputValue] = useState<string>('');
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [animationLog, setAnimationLog] = useState<string[]>([]);
+  const [dimensions, setDimensions] = useState({ width: 1200, height: 600 });
+
+  // Update dimensions on window resize
+  useEffect(() => {
+    const updateDimensions = () => {
+      const width = window.innerWidth - 40; // Account for padding
+      const height = window.innerHeight - 200; // Account for controls and header
+      setDimensions({ width: Math.max(800, width), height: Math.max(400, height) });
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
 
   // Initialize with a sample tree
   useEffect(() => {
@@ -21,9 +34,13 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
     root.insert(40);
     root.insert(60);
     root.insert(80);
-    root.calculatePositions();
+    root.insert(15);
+    root.insert(25);
+    root.insert(35);
+    root.insert(45);
+    root.calculatePositions(dimensions.width / 2, 80, dimensions.width / 8);
     setTree(root);
-  }, []);
+  }, [dimensions]);
 
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -47,11 +64,11 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
       // Animate the insertion process
       await animateInsertion(tree, value);
       tree.insert(value);
-      tree.calculatePositions();
+      tree.calculatePositions(dimensions.width / 2, 80, dimensions.width / 8);
       setTree(new TreeNode(tree.value));
       // Reconstruct the tree to trigger re-render
       const newTree = reconstructTree(tree);
-      newTree.calculatePositions();
+      newTree.calculatePositions(dimensions.width / 2, 80, dimensions.width / 8);
       setTree(newTree);
     }
 
@@ -222,33 +239,61 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
 
       // Render connections to children
       if (node.left) {
+        const lineColor = (node.isHighlighted || node.left.isHighlighted) ? '#f59e0b' : '#64748b';
         elements.push(
-          <line
-            key={`line-${node.value}-left`}
-            x1={node.x}
-            y1={node.y}
-            x2={node.left.x}
-            y2={node.left.y}
-            stroke="#64748b"
-            strokeWidth="2"
-            className="transition-all duration-300"
-          />
+          <g key={`line-${node.value}-left`}>
+            {/* Shadow line */}
+            <line
+              x1={node.x + 1}
+              y1={node.y + 1}
+              x2={node.left.x + 1}
+              y2={node.left.y + 1}
+              stroke="rgba(0,0,0,0.1)"
+              strokeWidth="3"
+              className="transition-all duration-300"
+            />
+            {/* Main line */}
+            <line
+              x1={node.x}
+              y1={node.y}
+              x2={node.left.x}
+              y2={node.left.y}
+              stroke={lineColor}
+              strokeWidth="3"
+              className="transition-all duration-300"
+              strokeLinecap="round"
+            />
+          </g>
         );
         elements.push(...renderNode(node.left));
       }
 
       if (node.right) {
+        const lineColor = (node.isHighlighted || node.right.isHighlighted) ? '#f59e0b' : '#64748b';
         elements.push(
-          <line
-            key={`line-${node.value}-right`}
-            x1={node.x}
-            y1={node.y}
-            x2={node.right.x}
-            y2={node.right.y}
-            stroke="#64748b"
-            strokeWidth="2"
-            className="transition-all duration-300"
-          />
+          <g key={`line-${node.value}-right`}>
+            {/* Shadow line */}
+            <line
+              x1={node.x + 1}
+              y1={node.y + 1}
+              x2={node.right.x + 1}
+              y2={node.right.y + 1}
+              stroke="rgba(0,0,0,0.1)"
+              strokeWidth="3"
+              className="transition-all duration-300"
+            />
+            {/* Main line */}
+            <line
+              x1={node.x}
+              y1={node.y}
+              x2={node.right.x}
+              y2={node.right.y}
+              stroke={lineColor}
+              strokeWidth="3"
+              className="transition-all duration-300"
+              strokeLinecap="round"
+            />
+          </g>
         );
         elements.push(...renderNode(node.right));
       }
@@ -262,28 +307,69 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
         ? '#8b5cf6' // purple for visited
         : '#3b82f6'; // blue for default
 
+      const nodeRadius = 30;
+      const strokeWidth = node.isHighlighted ? 4 : 2;
+
       elements.push(
-        <g key={`node-${node.value}`}>
+        <g key={`node-${node.value}`} className="cursor-pointer">
+          {/* Shadow */}
+          <circle
+            cx={node.x + 2}
+            cy={node.y + 2}
+            r={nodeRadius}
+            fill="rgba(0,0,0,0.1)"
+            className="transition-all duration-300"
+          />
+          {/* Main circle */}
           <circle
             cx={node.x}
             cy={node.y}
-            r="25"
+            r={nodeRadius}
             fill={nodeColor}
-            stroke="#1e293b"
-            strokeWidth="3"
+            stroke="#ffffff"
+            strokeWidth={strokeWidth}
+            className="transition-all duration-300 filter drop-shadow-lg"
+            style={{
+              filter: node.isHighlighted ? 'drop-shadow(0 0 15px rgba(245, 158, 11, 0.6))' : 
+                      node.isSearchResult ? 'drop-shadow(0 0 15px rgba(16, 185, 129, 0.6))' :
+                      'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))'
+            }}
+          />
+          {/* Inner highlight */}
+          <circle
+            cx={node.x - 8}
+            cy={node.y - 8}
+            r="6"
+            fill="rgba(255,255,255,0.3)"
             className="transition-all duration-300"
           />
+          {/* Text */}
           <text
             x={node.x}
             y={node.y}
             textAnchor="middle"
             dy="0.35em"
             fill="white"
-            fontSize="16"
+            fontSize="18"
             fontWeight="bold"
+            className="transition-all duration-300"
+            style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
           >
             {node.value}
           </text>
+          {/* Pulse animation for highlighted nodes */}
+          {node.isHighlighted && (
+            <circle
+              cx={node.x}
+              cy={node.y}
+              r={nodeRadius + 10}
+              fill="none"
+              stroke={nodeColor}
+              strokeWidth="2"
+              opacity="0.6"
+              className="animate-ping"
+            />
+          )}
         </g>
       );
 
@@ -291,47 +377,59 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
     };
 
     return (
-      <svg width="800" height="500" className="border rounded-lg bg-gray-50">
+      <svg 
+        width={dimensions.width} 
+        height={dimensions.height} 
+        className="border-2 border-gray-300 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 shadow-lg"
+        viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
+      >
         {renderNode(tree)}
       </svg>
     );
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-6 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-3xl font-bold text-center">
-            Binary Search Tree Visualization
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center space-y-6">
-            {/* Tree Visualization */}
-            <div className="w-full flex justify-center">
-              {renderTree()}
-            </div>
+    <div className="h-screen w-screen flex flex-col bg-gray-100">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b px-6 py-4">
+        <h1 className="text-2xl font-bold text-center text-gray-800">
+          🌳 Binary Search Tree Visualization
+        </h1>
+      </div>
+      
+      {/* Main content */}
+      <div className="flex-1 flex">
+        {/* Tree visualization area */}
+        <div className="flex-1 p-4 flex items-center justify-center">
+          {renderTree()}
+        </div>
+        
+        {/* Control panel */}
+        <div className="w-80 bg-white shadow-lg border-l flex flex-col">
+          <div className="p-4 border-b">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Controls</h2>
 
-            {/* Controls */}
-            <div className="flex flex-wrap gap-4 items-center justify-center">
-              <div className="flex gap-2">
-                <Input
-                  type="number"
-                  placeholder="Enter number"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleInsert();
-                    }
-                  }}
-                  disabled={isAnimating}
-                  className="w-32"
-                />
+            {/* Input Section */}
+            <div className="space-y-3">
+              <Input
+                type="number"
+                placeholder="Enter number"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleInsert();
+                  }
+                }}
+                disabled={isAnimating}
+                className="w-full"
+              />
+              <div className="grid grid-cols-2 gap-2">
                 <Button
                   onClick={handleInsert}
                   disabled={isAnimating || !inputValue}
                   variant="default"
+                  className="w-full"
                 >
                   Insert
                 </Button>
@@ -339,102 +437,110 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
                   onClick={handleSearch}
                   disabled={isAnimating || !inputValue || !tree}
                   variant="secondary"
+                  className="w-full"
                 >
                   Search
                 </Button>
               </div>
-
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => handleTraversal('inorder')}
-                  disabled={isAnimating || !tree}
-                  variant="outline"
-                  size="sm"
-                >
-                  In-order
-                </Button>
-                <Button
-                  onClick={() => handleTraversal('preorder')}
-                  disabled={isAnimating || !tree}
-                  variant="outline"
-                  size="sm"
-                >
-                  Pre-order
-                </Button>
-                <Button
-                  onClick={() => handleTraversal('postorder')}
-                  disabled={isAnimating || !tree}
-                  variant="outline"
-                  size="sm"
-                >
-                  Post-order
-                </Button>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  onClick={clearHighlights}
-                  disabled={isAnimating}
-                  variant="outline"
-                  size="sm"
-                >
-                  Clear Highlights
-                </Button>
-                <Button
-                  onClick={clearTree}
-                  disabled={isAnimating}
-                  variant="destructive"
-                  size="sm"
-                >
-                  Clear Tree
-                </Button>
-              </div>
             </div>
+          </div>
+          
+          {/* Traversal Section */}
+          <div className="p-4 border-b">
+            <h3 className="text-md font-semibold text-gray-700 mb-3">Tree Traversal</h3>
+            <div className="space-y-2">
+              <Button
+                onClick={() => handleTraversal('inorder')}
+                disabled={isAnimating || !tree}
+                variant="outline"
+                className="w-full justify-start"
+              >
+                In-order (L → Root → R)
+              </Button>
+              <Button
+                onClick={() => handleTraversal('preorder')}
+                disabled={isAnimating || !tree}
+                variant="outline"
+                className="w-full justify-start"
+              >
+                Pre-order (Root → L → R)
+              </Button>
+              <Button
+                onClick={() => handleTraversal('postorder')}
+                disabled={isAnimating || !tree}
+                variant="outline"
+                className="w-full justify-start"
+              >
+                Post-order (L → R → Root)
+              </Button>
+            </div>
+          </div>
+          
+          {/* Utility Section */}
+          <div className="p-4 border-b">
+            <h3 className="text-md font-semibold text-gray-700 mb-3">Utilities</h3>
+            <div className="space-y-2">
+              <Button
+                onClick={clearHighlights}
+                disabled={isAnimating}
+                variant="outline"
+                className="w-full"
+              >
+                Clear Highlights
+              </Button>
+              <Button
+                onClick={clearTree}
+                disabled={isAnimating}
+                variant="destructive"
+                className="w-full"
+              >
+                Clear Tree
+              </Button>
+            </div>
+          </div>
 
-            {/* Legend */}
-            <div className="flex gap-6 text-sm">
+          {/* Legend */}
+          <div className="p-4 border-b">
+            <h3 className="text-md font-semibold text-gray-700 mb-3">Legend</h3>
+            <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                 <span>Default Node</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-amber-500 rounded-full"></div>
-                <span>Currently Processing</span>
+                <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
+                <span>Processing</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
                 <span>Visited</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                <span>Search Result</span>
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span>Found</span>
               </div>
             </div>
-
-            {/* Animation Log */}
-            <Card className="w-full max-w-md">
-              <CardHeader>
-                <CardTitle className="text-lg">Algorithm Log</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1 max-h-32 overflow-y-auto">
-                  {animationLog.length === 0 ? (
-                    <p className="text-gray-500 text-sm">
-                      Perform operations to see algorithm steps...
-                    </p>
-                  ) : (
-                    animationLog.map((log, index) => (
-                      <p key={index} className="text-sm font-mono">
-                        {log}
-                      </p>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Algorithm Log */}
+          <div className="flex-1 p-4">
+            <h3 className="text-md font-semibold text-gray-700 mb-3">Algorithm Log</h3>
+            <div className="space-y-1 max-h-40 overflow-y-auto bg-gray-50 p-3 rounded border text-xs">
+              {animationLog.length === 0 ? (
+                <p className="text-gray-500">
+                  Perform operations to see algorithm steps...
+                </p>
+              ) : (
+                animationLog.map((log, index) => (
+                  <p key={index} className="font-mono text-gray-700">
+                    {log}
+                  </p>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

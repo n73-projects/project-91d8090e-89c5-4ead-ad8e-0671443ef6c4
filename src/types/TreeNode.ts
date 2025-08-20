@@ -85,23 +85,29 @@ export class TreeNode {
     this.x = x;
     this.y = y;
 
-    const leftSubtreeSize = this.left ? this.getSubtreeSize(this.left) : 0;
-    const rightSubtreeSize = this.right ? this.getSubtreeSize(this.right) : 0;
+    // Calculate the width needed for each subtree
+    const leftWidth = this.left ? this.getSubtreeWidth(this.left) : 0;
+    const rightWidth = this.right ? this.getSubtreeWidth(this.right) : 0;
+    
+    // Improved spacing calculation
+    const baseSpacing = Math.max(60, horizontalSpacing);
+    const verticalSpacing = 90;
 
     if (this.left) {
-      const leftX = x - (horizontalSpacing * Math.max(1, leftSubtreeSize / 2));
-      this.left.calculatePositions(leftX, y + 80, horizontalSpacing * 0.7);
+      const leftX = x - Math.max(baseSpacing, leftWidth * 40);
+      this.left.calculatePositions(leftX, y + verticalSpacing, baseSpacing * 0.75);
     }
 
     if (this.right) {
-      const rightX = x + (horizontalSpacing * Math.max(1, rightSubtreeSize / 2));
-      this.right.calculatePositions(rightX, y + 80, horizontalSpacing * 0.7);
+      const rightX = x + Math.max(baseSpacing, rightWidth * 40);
+      this.right.calculatePositions(rightX, y + verticalSpacing, baseSpacing * 0.75);
     }
   }
 
-  private getSubtreeSize(node: TreeNode | null): number {
+
+  private getSubtreeWidth(node: TreeNode | null): number {
     if (!node) return 0;
-    return 1 + this.getSubtreeSize(node.left) + this.getSubtreeSize(node.right);
+    return 1 + Math.max(this.getSubtreeWidth(node.left), this.getSubtreeWidth(node.right));
   }
 
   clearHighlights(): void {
