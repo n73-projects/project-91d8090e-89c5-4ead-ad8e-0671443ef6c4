@@ -17,7 +17,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
     const updateDimensions = () => {
       const width = window.innerWidth - 40;
       const height = window.innerHeight - 300; // Account for header and input
-      setDimensions({ width: Math.max(800, width), height: Math.max(400, height) });
+      setDimensions({ width: Math.max(1000, width), height: Math.max(500, height) });
     };
 
     updateDimensions();
@@ -34,7 +34,15 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
     root.insert(40);
     root.insert(60);
     root.insert(80);
-    root.calculatePositions(dimensions.width / 2, 80, dimensions.width / 8);
+    root.insert(15);
+    root.insert(25);
+    root.insert(35);
+    root.insert(45);
+    root.insert(55);
+    root.insert(65);
+    root.insert(75);
+    root.insert(85);
+    root.calculatePositions(dimensions.width / 2, 80, Math.max(100, dimensions.width / 10));
     setTree(root);
   }, [dimensions]);
 
@@ -48,6 +56,33 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
     setRenderTrigger(prev => prev + 1);
   };
 
+  const calculateTreeBounds = (node: TreeNode | null): { minX: number, maxX: number, minY: number, maxY: number } => {
+    if (!node) return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+
+    let minX = node.x - 50; // Account for node radius and directional indicators
+    let maxX = node.x + 50;
+    let minY = node.y - 50;
+    let maxY = node.y + 50;
+
+    if (node.left) {
+      const leftBounds = calculateTreeBounds(node.left);
+      minX = Math.min(minX, leftBounds.minX);
+      maxX = Math.max(maxX, leftBounds.maxX);
+      minY = Math.min(minY, leftBounds.minY);
+      maxY = Math.max(maxY, leftBounds.maxY);
+    }
+
+    if (node.right) {
+      const rightBounds = calculateTreeBounds(node.right);
+      minX = Math.min(minX, rightBounds.minX);
+      maxX = Math.max(maxX, rightBounds.maxX);
+      minY = Math.min(minY, rightBounds.minY);
+      maxY = Math.max(maxY, rightBounds.maxY);
+    }
+
+    return { minX, maxX, minY, maxY };
+  };
+
   const handleInsert = async () => {
     const value = parseInt(inputValue);
     if (isNaN(value) || isAnimating) return;
@@ -56,7 +91,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
 
     if (!tree) {
       const newTree = new TreeNode(value);
-      newTree.calculatePositions(dimensions.width / 2, 80, dimensions.width / 8);
+      newTree.calculatePositions(dimensions.width / 2, 80, Math.max(100, dimensions.width / 10));
       setTree(newTree);
       addAnimationLog(`Created root node with value: ${value}`);
     } else {
@@ -76,7 +111,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
       tree.insert(value);
       
       // Recalculate positions for the new tree structure
-      tree.calculatePositions(dimensions.width / 2, 80, dimensions.width / 8);
+      tree.calculatePositions(dimensions.width / 2, 80, Math.max(100, dimensions.width / 10));
       
       // Clear all highlights and update the tree
       tree.clearHighlights();
@@ -515,12 +550,21 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
       return elements;
     };
 
+    // Calculate the bounds of the tree to optimize viewBox
+    const bounds = calculateTreeBounds(tree);
+    const padding = 100;
+    const viewBoxX = Math.max(0, bounds.minX - padding);
+    const viewBoxY = Math.max(0, bounds.minY - padding);
+    const viewBoxWidth = Math.min(dimensions.width, bounds.maxX - bounds.minX + 2 * padding);
+    const viewBoxHeight = Math.min(dimensions.height, bounds.maxY - bounds.minY + 2 * padding);
+
     return (
       <svg 
         width={dimensions.width} 
         height={dimensions.height} 
         className="border-2 border-gray-300 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 shadow-lg"
-        viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
+        viewBox={`${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`}
+        preserveAspectRatio="xMidYMid meet"
       >
         {renderNode(tree)}
       </svg>

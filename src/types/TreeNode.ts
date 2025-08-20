@@ -82,33 +82,62 @@ export class TreeNode {
   }
 
   calculatePositions(x: number = 400, y: number = 50, horizontalSpacing: number = 100): void {
+    // First pass: calculate the minimum width needed for each subtree
+    this.calculateSubtreeWidths();
+    
+    // Second pass: position nodes with proper spacing to avoid overlaps
+    this.positionNodes(x, y, horizontalSpacing);
+  }
+
+  private calculateSubtreeWidths(): number {
+    let leftWidth = 0;
+    let rightWidth = 0;
+    
+    if (this.left) {
+      leftWidth = this.left.calculateSubtreeWidths();
+    }
+    if (this.right) {
+      rightWidth = this.right.calculateSubtreeWidths();
+    }
+    
+    // Store the width needed for this subtree
+    return Math.max(1, leftWidth + rightWidth);
+  }
+
+  private positionNodes(x: number, y: number, baseSpacing: number): void {
     this.x = x;
     this.y = y;
 
-    // Calculate the width needed for each subtree
-    const leftWidth = this.left ? this.getSubtreeWidth(this.left) : 0;
-    const rightWidth = this.right ? this.getSubtreeWidth(this.right) : 0;
+    // Calculate space needed for each subtree based on their complexity
+    const leftSize = this.left ? this.getSubtreeSize(this.left) : 0;
+    const rightSize = this.right ? this.getSubtreeSize(this.right) : 0;
     
-    // Improved spacing calculation
-    const baseSpacing = Math.max(60, horizontalSpacing);
-    const verticalSpacing = 90;
-
+    // Dynamic spacing that increases with tree density
+    const minSpacing = 80;  // Minimum distance between nodes
+    const spacingMultiplier = Math.max(1, Math.sqrt(leftSize + rightSize) * 0.7);
+    const effectiveSpacing = Math.max(minSpacing, baseSpacing * spacingMultiplier);
+    const verticalSpacing = 100; // Increased for better readability
+    
     if (this.left) {
-      const leftX = x - Math.max(baseSpacing, leftWidth * 40);
-      this.left.calculatePositions(leftX, y + verticalSpacing, baseSpacing * 0.75);
+      // Calculate left position with enough space for the entire left subtree
+      const leftSpacing = effectiveSpacing * Math.max(1, Math.sqrt(leftSize) * 0.8);
+      const leftX = x - leftSpacing;
+      this.left.positionNodes(leftX, y + verticalSpacing, baseSpacing * 0.8);
     }
 
     if (this.right) {
-      const rightX = x + Math.max(baseSpacing, rightWidth * 40);
-      this.right.calculatePositions(rightX, y + verticalSpacing, baseSpacing * 0.75);
+      // Calculate right position with enough space for the entire right subtree
+      const rightSpacing = effectiveSpacing * Math.max(1, Math.sqrt(rightSize) * 0.8);
+      const rightX = x + rightSpacing;
+      this.right.positionNodes(rightX, y + verticalSpacing, baseSpacing * 0.8);
     }
   }
 
-
-  private getSubtreeWidth(node: TreeNode | null): number {
+  private getSubtreeSize(node: TreeNode | null): number {
     if (!node) return 0;
-    return 1 + Math.max(this.getSubtreeWidth(node.left), this.getSubtreeWidth(node.right));
+    return 1 + this.getSubtreeSize(node.left) + this.getSubtreeSize(node.right);
   }
+
 
   clearHighlights(): void {
     this.isHighlighted = false;
