@@ -10,6 +10,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [animationLog, setAnimationLog] = useState<string[]>([]);
   const [dimensions, setDimensions] = useState({ width: 1200, height: 500 });
+  const [renderTrigger, setRenderTrigger] = useState(0);
 
   // Update dimensions on window resize
   useEffect(() => {
@@ -43,12 +44,15 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
     setAnimationLog(prev => [...prev.slice(-6), message]);
   };
 
+  const forceRerender = () => {
+    setRenderTrigger(prev => prev + 1);
+  };
+
   const handleInsert = async () => {
     const value = parseInt(inputValue);
     if (isNaN(value) || isAnimating) return;
 
     setIsAnimating(true);
-    addAnimationLog(`Inserting value: ${value}`);
 
     if (!tree) {
       const newTree = new TreeNode(value);
@@ -56,12 +60,29 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
       setTree(newTree);
       addAnimationLog(`Created root node with value: ${value}`);
     } else {
+      // Check if value already exists
+      const existingNode = tree.search(value);
+      if (existingNode) {
+        addAnimationLog(`⚠️ Value ${value} already exists in tree`);
+        setIsAnimating(false);
+        setInputValue('');
+        return;
+      }
+
+      // Run the animation first
       await animateInsertion(tree, value);
+      
+      // Then actually insert the value
       tree.insert(value);
+      
+      // Recalculate positions for the new tree structure
       tree.calculatePositions(dimensions.width / 2, 80, dimensions.width / 8);
-      const newTree = reconstructTree(tree);
-      newTree.calculatePositions(dimensions.width / 2, 80, dimensions.width / 8);
-      setTree(newTree);
+      
+      // Clear all highlights and update the tree
+      tree.clearHighlights();
+      forceRerender();
+      
+      addAnimationLog(`✅ Node ${value} successfully inserted!`);
     }
 
     setInputValue('');
@@ -90,7 +111,9 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
     while (current) {
       current.isHighlighted = true;
       path.push(current);
-      setTree(reconstructTree(tree!));
+      
+      // Force a re-render without reconstructing the entire tree
+      forceRerender();
       
       // Show comparison with visual emphasis
       addAnimationLog(`📍 Comparing ${value} with ${current.value}...`);
@@ -100,6 +123,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
         // Highlight the left direction
         addAnimationLog(`✅ ${value} < ${current.value} → Go LEFT (smaller values)`);
         current.isVisited = true; // Mark as part of the path
+        forceRerender(); // Update visual state
         await sleep(800);
         
         if (!current.left) {
@@ -113,6 +137,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
         // Highlight the right direction
         addAnimationLog(`✅ ${value} > ${current.value} → Go RIGHT (larger values)`);
         current.isVisited = true; // Mark as part of the path
+        forceRerender(); // Update visual state
         await sleep(800);
         
         if (!current.right) {
@@ -125,15 +150,13 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
       } else {
         addAnimationLog(`⚠️ Value ${value} already exists in tree - no insertion needed`);
         current.isHighlighted = false;
+        forceRerender();
         return;
       }
     }
 
     // Show the final insertion with a special animation
     addAnimationLog(`🎉 Inserting ${value} at the correct position!`);
-    await sleep(500);
-    
-    // Mark the insertion point
     current.isHighlighted = false;
     current.isVisited = true;
     
@@ -141,7 +164,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
     for (const pathNode of path) {
       pathNode.isVisited = true;
     }
-    setTree(reconstructTree(tree!));
+    forceRerender();
     await sleep(1000);
     
     addAnimationLog(`✨ ${value} successfully added! Tree maintains BST order.`);
@@ -153,37 +176,39 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
 
     setIsAnimating(true);
     tree.clearHighlights();
-    addAnimationLog(`Searching for value: ${value}`);
+    addAnimationLog(`🔍 Searching for value: ${value}`);
 
     let current: TreeNode | null = tree;
     let found = false;
 
     while (current) {
       current.isHighlighted = true;
-      setTree(reconstructTree(tree));
+      forceRerender();
       await sleep(800);
 
       if (value === current.value) {
         current.isSearchResult = true;
-        addAnimationLog(`Found ${value}!`);
+        addAnimationLog(`✅ Found ${value}!`);
         found = true;
         break;
       } else if (value < current.value) {
-        addAnimationLog(`${value} < ${current.value}, go left`);
+        addAnimationLog(`📍 ${value} < ${current.value}, go left`);
         current.isHighlighted = false;
+        current.isVisited = true;
         current = current.left;
       } else {
-        addAnimationLog(`${value} > ${current.value}, go right`);
+        addAnimationLog(`📍 ${value} > ${current.value}, go right`);
         current.isHighlighted = false;
+        current.isVisited = true;
         current = current.right;
       }
     }
 
     if (!found) {
-      addAnimationLog(`Value ${value} not found in tree`);
+      addAnimationLog(`❌ Value ${value} not found in tree`);
     }
 
-    setTree(reconstructTree(tree));
+    forceRerender();
     setInputValue('');
     setIsAnimating(false);
   };
@@ -201,7 +226,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
       node.isHighlighted = true;
       node.isVisited = true;
       visitedOrder.push(node.value);
-      setTree(reconstructTree(tree));
+      forceRerender();
       await sleep(800);
       node.isHighlighted = false;
     };
@@ -252,12 +277,15 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
   const clearHighlights = () => {
     if (tree) {
       tree.clearHighlights();
-      setTree(reconstructTree(tree));
+      forceRerender();
     }
   };
 
   const renderTree = () => {
     if (!tree) return null;
+    
+    // Use renderTrigger to force re-renders (this variable forces React to update)
+    void renderTrigger;
 
     const renderNode = (node: TreeNode): React.ReactElement[] => {
       const elements: React.ReactElement[] = [];
