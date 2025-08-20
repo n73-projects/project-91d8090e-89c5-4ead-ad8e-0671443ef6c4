@@ -9,13 +9,13 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
   const [inputValue, setInputValue] = useState<string>('');
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [animationLog, setAnimationLog] = useState<string[]>([]);
-  const [dimensions, setDimensions] = useState({ width: 1200, height: 600 });
+  const [dimensions, setDimensions] = useState({ width: 1200, height: 500 });
 
   // Update dimensions on window resize
   useEffect(() => {
     const updateDimensions = () => {
-      const width = window.innerWidth - 40; // Account for padding
-      const height = window.innerHeight - 200; // Account for controls and header
+      const width = window.innerWidth - 40;
+      const height = window.innerHeight - 300; // Account for header and input
       setDimensions({ width: Math.max(800, width), height: Math.max(400, height) });
     };
 
@@ -33,10 +33,6 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
     root.insert(40);
     root.insert(60);
     root.insert(80);
-    root.insert(15);
-    root.insert(25);
-    root.insert(35);
-    root.insert(45);
     root.calculatePositions(dimensions.width / 2, 80, dimensions.width / 8);
     setTree(root);
   }, [dimensions]);
@@ -60,12 +56,9 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
       setTree(newTree);
       addAnimationLog(`Created root node with value: ${value}`);
     } else {
-      // Animate the insertion process
       await animateInsertion(tree, value);
       tree.insert(value);
       tree.calculatePositions(dimensions.width / 2, 80, dimensions.width / 8);
-      setTree(new TreeNode(tree.value));
-      // Reconstruct the tree to trigger re-render
       const newTree = reconstructTree(tree);
       newTree.calculatePositions(dimensions.width / 2, 80, dimensions.width / 8);
       setTree(newTree);
@@ -241,17 +234,6 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
         const lineColor = (node.isHighlighted || node.left.isHighlighted) ? '#f59e0b' : '#64748b';
         elements.push(
           <g key={`line-${node.value}-left`}>
-            {/* Shadow line */}
-            <line
-              x1={node.x + 1}
-              y1={node.y + 1}
-              x2={node.left.x + 1}
-              y2={node.left.y + 1}
-              stroke="rgba(0,0,0,0.1)"
-              strokeWidth="3"
-              className="transition-all duration-300"
-            />
-            {/* Main line */}
             <line
               x1={node.x}
               y1={node.y}
@@ -271,17 +253,6 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
         const lineColor = (node.isHighlighted || node.right.isHighlighted) ? '#f59e0b' : '#64748b';
         elements.push(
           <g key={`line-${node.value}-right`}>
-            {/* Shadow line */}
-            <line
-              x1={node.x + 1}
-              y1={node.y + 1}
-              x2={node.right.x + 1}
-              y2={node.right.y + 1}
-              stroke="rgba(0,0,0,0.1)"
-              strokeWidth="3"
-              className="transition-all duration-300"
-            />
-            {/* Main line */}
             <line
               x1={node.x}
               y1={node.y}
@@ -307,42 +278,18 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
         : '#3b82f6'; // blue for default
 
       const nodeRadius = 30;
-      const strokeWidth = node.isHighlighted ? 4 : 2;
 
       elements.push(
         <g key={`node-${node.value}`} className="cursor-pointer">
-          {/* Shadow */}
-          <circle
-            cx={node.x + 2}
-            cy={node.y + 2}
-            r={nodeRadius}
-            fill="rgba(0,0,0,0.1)"
-            className="transition-all duration-300"
-          />
-          {/* Main circle */}
           <circle
             cx={node.x}
             cy={node.y}
             r={nodeRadius}
             fill={nodeColor}
             stroke="#ffffff"
-            strokeWidth={strokeWidth}
-            className="transition-all duration-300 filter drop-shadow-lg"
-            style={{
-              filter: node.isHighlighted ? 'drop-shadow(0 0 15px rgba(245, 158, 11, 0.6))' : 
-                      node.isSearchResult ? 'drop-shadow(0 0 15px rgba(16, 185, 129, 0.6))' :
-                      'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))'
-            }}
-          />
-          {/* Inner highlight */}
-          <circle
-            cx={node.x - 8}
-            cy={node.y - 8}
-            r="6"
-            fill="rgba(255,255,255,0.3)"
+            strokeWidth="3"
             className="transition-all duration-300"
           />
-          {/* Text */}
           <text
             x={node.x}
             y={node.y}
@@ -352,11 +299,9 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
             fontSize="18"
             fontWeight="bold"
             className="transition-all duration-300"
-            style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
           >
             {node.value}
           </text>
-          {/* Pulse animation for highlighted nodes */}
           {node.isHighlighted && (
             <circle
               cx={node.x}
@@ -396,6 +341,75 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
         </h1>
       </div>
       
+      {/* Input Section - TOP OF SCREEN */}
+      <div className="bg-gradient-to-r from-blue-100 to-green-100 p-4 border-b-4 border-blue-500">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg p-6 shadow-lg border-2 border-blue-400">
+            <h2 className="text-2xl font-bold text-center text-blue-800 mb-4">
+              ➕ ADD NUMBERS TO TREE ➕
+            </h2>
+            <div className="flex gap-4 items-end justify-center">
+              <div className="flex-1 max-w-xs">
+                <label className="block text-lg font-semibold text-gray-800 mb-2">
+                  Enter a number:
+                </label>
+                <input
+                  type="number"
+                  placeholder="Type here (e.g., 42)"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleInsert();
+                    }
+                  }}
+                  disabled={isAnimating}
+                  className="w-full text-2xl py-4 px-4 border-4 border-blue-500 focus:border-blue-700 focus:ring-4 focus:ring-blue-300 rounded-lg focus:outline-none disabled:opacity-50 bg-yellow-50 text-center font-bold shadow-lg"
+                  style={{ minHeight: '70px' }}
+                />
+              </div>
+              <Button
+                onClick={handleInsert}
+                disabled={isAnimating || !inputValue}
+                variant="default"
+                className="px-8 py-4 text-xl font-bold bg-green-600 hover:bg-green-700 text-white h-[70px]"
+              >
+                INSERT
+              </Button>
+              <Button
+                onClick={handleSearch}
+                disabled={isAnimating || !inputValue || !tree}
+                variant="secondary"
+                className="px-8 py-4 text-xl font-bold h-[70px]"
+              >
+                SEARCH
+              </Button>
+            </div>
+            {isAnimating && (
+              <div className="text-center mt-4 text-lg text-blue-600 font-bold animate-pulse">
+                🤖 Processing algorithm...
+              </div>
+            )}
+            <div className="flex gap-2 justify-center mt-4">
+              <span className="text-sm text-gray-600">Quick add:</span>
+              {[10, 25, 75, 90].map(num => (
+                <button
+                  key={num}
+                  onClick={() => {
+                    setInputValue(num.toString());
+                    setTimeout(() => handleInsert(), 100);
+                  }}
+                  disabled={isAnimating}
+                  className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm disabled:opacity-50"
+                >
+                  {num}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      
       {/* Main content */}
       <div className="flex-1 flex">
         {/* Tree visualization area */}
@@ -405,118 +419,10 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
         
         {/* Control panel */}
         <div className="w-80 bg-white shadow-lg border-l flex flex-col">
-          {/* Input Section */}
-          <div className="p-6 border-b bg-gradient-to-r from-blue-100 to-indigo-100 border-2 border-blue-300">
-            <h2 className="text-xl font-bold text-blue-800 mb-4 text-center">
-              🔢 Add Numbers to Tree
-            </h2>
-            <div className="space-y-4">
-              <div className="bg-white p-4 rounded-lg shadow-md border-2 border-blue-200">
-                <label className="block text-lg font-semibold text-gray-800 mb-3 text-center">
-                  Type a number here:
-                </label>
-                <input
-                  type="number"
-                  placeholder="Enter any number..."
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleInsert();
-                    }
-                  }}
-                  disabled={isAnimating}
-                  className="w-full text-xl py-4 px-4 border-3 border-blue-400 focus:border-blue-600 focus:ring-3 focus:ring-blue-300 rounded-lg focus:outline-none disabled:opacity-50 bg-white text-center font-semibold shadow-inner"
-                  style={{ fontSize: '20px', minHeight: '60px' }}
-                />
-                <p className="text-sm text-gray-600 mt-2 text-center">
-                  Press Enter or click Insert to add the number
-                </p>
-              </div>
-              <div className="space-y-3">
-                <Button
-                  onClick={handleInsert}
-                  disabled={isAnimating || !inputValue}
-                  variant="default"
-                  className="w-full py-3 text-lg font-semibold bg-green-600 hover:bg-green-700"
-                >
-                  ➕ Insert Number
-                </Button>
-                <Button
-                  onClick={handleSearch}
-                  disabled={isAnimating || !inputValue || !tree}
-                  variant="secondary"
-                  className="w-full py-3 text-lg font-semibold"
-                >
-                  🔍 Search Number
-                </Button>
-              </div>
-              {isAnimating && (
-                <div className="text-center text-sm text-blue-600 animate-pulse">
-                  Processing...
-                </div>
-              )}
-            </div>
-          </div>
           
-          {/* Quick Actions */}
-          <div className="p-4 border-b bg-green-50">
-            <h3 className="text-md font-semibold text-gray-700 mb-3">⚡ Quick Add</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                onClick={() => {
-                  setInputValue('25');
-                  setTimeout(() => handleInsert(), 100);
-                }}
-                disabled={isAnimating}
-                variant="outline"
-                size="sm"
-                className="text-xs"
-              >
-                Add 25
-              </Button>
-              <Button
-                onClick={() => {
-                  setInputValue('75');
-                  setTimeout(() => handleInsert(), 100);
-                }}
-                disabled={isAnimating}
-                variant="outline"
-                size="sm"
-                className="text-xs"
-              >
-                Add 75
-              </Button>
-              <Button
-                onClick={() => {
-                  setInputValue('10');
-                  setTimeout(() => handleInsert(), 100);
-                }}
-                disabled={isAnimating}
-                variant="outline"
-                size="sm"
-                className="text-xs"
-              >
-                Add 10
-              </Button>
-              <Button
-                onClick={() => {
-                  setInputValue('90');
-                  setTimeout(() => handleInsert(), 100);
-                }}
-                disabled={isAnimating}
-                variant="outline"
-                size="sm"
-                className="text-xs"
-              >
-                Add 90
-              </Button>
-            </div>
-          </div>
-
           {/* Traversal Section */}
           <div className="p-4 border-b">
-            <h3 className="text-md font-semibold text-gray-700 mb-3">🌲 Tree Traversal</h3>
+            <h3 className="text-lg font-semibold text-gray-700 mb-3">🌲 Tree Traversal</h3>
             <div className="space-y-2">
               <Button
                 onClick={() => handleTraversal('inorder')}
@@ -547,7 +453,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
           
           {/* Utility Section */}
           <div className="p-4 border-b">
-            <h3 className="text-md font-semibold text-gray-700 mb-3">🛠️ Utilities</h3>
+            <h3 className="text-lg font-semibold text-gray-700 mb-3">🛠️ Utilities</h3>
             <div className="space-y-2">
               <Button
                 onClick={clearHighlights}
@@ -570,7 +476,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
 
           {/* Legend */}
           <div className="p-4 border-b">
-            <h3 className="text-md font-semibold text-gray-700 mb-3">🎨 Legend</h3>
+            <h3 className="text-lg font-semibold text-gray-700 mb-3">🎨 Legend</h3>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
@@ -593,11 +499,11 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
 
           {/* Algorithm Log */}
           <div className="flex-1 p-4">
-            <h3 className="text-md font-semibold text-gray-700 mb-3">📋 Algorithm Log</h3>
+            <h3 className="text-lg font-semibold text-gray-700 mb-3">📋 Algorithm Log</h3>
             <div className="space-y-1 max-h-40 overflow-y-auto bg-gray-50 p-3 rounded border text-xs">
               {animationLog.length === 0 ? (
                 <p className="text-gray-500">
-                  Use the input field above to see algorithm steps...
+                  Use the input field at the top to see algorithm steps...
                 </p>
               ) : (
                 animationLog.map((log, index) => (
