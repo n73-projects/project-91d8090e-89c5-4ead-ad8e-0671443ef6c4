@@ -40,7 +40,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   const addAnimationLog = (message: string) => {
-    setAnimationLog(prev => [...prev.slice(-4), message]);
+    setAnimationLog(prev => [...prev.slice(-6), message]);
   };
 
   const handleInsert = async () => {
@@ -82,36 +82,69 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
   const animateInsertion = async (node: TreeNode, value: number) => {
     node.clearHighlights();
     let current = node;
+    let path: TreeNode[] = [];
+
+    addAnimationLog(`🔄 Starting insertion of ${value}`);
+    await sleep(400);
 
     while (current) {
       current.isHighlighted = true;
+      path.push(current);
       setTree(reconstructTree(tree!));
-      await sleep(800);
+      
+      // Show comparison with visual emphasis
+      addAnimationLog(`📍 Comparing ${value} with ${current.value}...`);
+      await sleep(1000);
 
       if (value < current.value) {
-        addAnimationLog(`${value} < ${current.value}, go left`);
+        // Highlight the left direction
+        addAnimationLog(`✅ ${value} < ${current.value} → Go LEFT (smaller values)`);
+        current.isVisited = true; // Mark as part of the path
+        await sleep(800);
+        
         if (!current.left) {
-          addAnimationLog(`Found insertion point: left child of ${current.value}`);
+          addAnimationLog(`🎯 Found insertion point: LEFT child of ${current.value}`);
+          addAnimationLog(`💡 Rule: ${value} < ${current.value}, so ${value} goes to the left`);
           break;
         }
         current.isHighlighted = false;
         current = current.left;
       } else if (value > current.value) {
-        addAnimationLog(`${value} > ${current.value}, go right`);
+        // Highlight the right direction
+        addAnimationLog(`✅ ${value} > ${current.value} → Go RIGHT (larger values)`);
+        current.isVisited = true; // Mark as part of the path
+        await sleep(800);
+        
         if (!current.right) {
-          addAnimationLog(`Found insertion point: right child of ${current.value}`);
+          addAnimationLog(`🎯 Found insertion point: RIGHT child of ${current.value}`);
+          addAnimationLog(`💡 Rule: ${value} > ${current.value}, so ${value} goes to the right`);
           break;
         }
         current.isHighlighted = false;
         current = current.right;
       } else {
-        addAnimationLog(`Value ${value} already exists in tree`);
+        addAnimationLog(`⚠️ Value ${value} already exists in tree - no insertion needed`);
         current.isHighlighted = false;
         return;
       }
     }
 
+    // Show the final insertion with a special animation
+    addAnimationLog(`🎉 Inserting ${value} at the correct position!`);
+    await sleep(500);
+    
+    // Mark the insertion point
     current.isHighlighted = false;
+    current.isVisited = true;
+    
+    // Highlight the entire path taken
+    for (const pathNode of path) {
+      pathNode.isVisited = true;
+    }
+    setTree(reconstructTree(tree!));
+    await sleep(1000);
+    
+    addAnimationLog(`✨ ${value} successfully added! Tree maintains BST order.`);
   };
 
   const handleSearch = async () => {
@@ -229,40 +262,104 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
     const renderNode = (node: TreeNode): React.ReactElement[] => {
       const elements: React.ReactElement[] = [];
 
-      // Render connections to children
+      // Render connections to children with directional arrows
       if (node.left) {
-        const lineColor = (node.isHighlighted || node.left.isHighlighted) ? '#f59e0b' : '#64748b';
+        const lineColor = (node.isHighlighted || node.left.isHighlighted) ? '#f59e0b' : 
+                         (node.isVisited || node.left.isVisited) ? '#8b5cf6' : '#64748b';
+        const lineWidth = (node.isHighlighted || node.left.isHighlighted) ? '4' : '3';
+        
+        // Calculate arrow position
+        const dx = node.left.x - node.x;
+        const dy = node.left.y - node.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const unitX = dx / length;
+        const unitY = dy / length;
+        
+        // Arrow position (80% along the line)
+        const arrowX = node.x + (dx * 0.8);
+        const arrowY = node.y + (dy * 0.8);
+        
         elements.push(
           <g key={`line-${node.value}-left`}>
+            {/* Main line */}
             <line
               x1={node.x}
               y1={node.y}
               x2={node.left.x}
               y2={node.left.y}
               stroke={lineColor}
-              strokeWidth="3"
+              strokeWidth={lineWidth}
               className="transition-all duration-300"
               strokeLinecap="round"
             />
+            {/* Directional arrow */}
+            <polygon
+              points={`${arrowX},${arrowY} ${arrowX - unitX * 8 - unitY * 4},${arrowY - unitY * 8 + unitX * 4} ${arrowX - unitX * 8 + unitY * 4},${arrowY - unitY * 8 - unitX * 4}`}
+              fill={lineColor}
+              className="transition-all duration-300"
+            />
+            {/* "SMALLER" label */}
+            <text
+              x={node.x - 25}
+              y={node.y + 15}
+              fill="#666"
+              fontSize="10"
+              fontWeight="bold"
+              className="transition-all duration-300"
+            >
+              &lt;
+            </text>
           </g>
         );
         elements.push(...renderNode(node.left));
       }
 
       if (node.right) {
-        const lineColor = (node.isHighlighted || node.right.isHighlighted) ? '#f59e0b' : '#64748b';
+        const lineColor = (node.isHighlighted || node.right.isHighlighted) ? '#f59e0b' : 
+                         (node.isVisited || node.right.isVisited) ? '#8b5cf6' : '#64748b';
+        const lineWidth = (node.isHighlighted || node.right.isHighlighted) ? '4' : '3';
+        
+        // Calculate arrow position
+        const dx = node.right.x - node.x;
+        const dy = node.right.y - node.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const unitX = dx / length;
+        const unitY = dy / length;
+        
+        // Arrow position (80% along the line)
+        const arrowX = node.x + (dx * 0.8);
+        const arrowY = node.y + (dy * 0.8);
+        
         elements.push(
           <g key={`line-${node.value}-right`}>
+            {/* Main line */}
             <line
               x1={node.x}
               y1={node.y}
               x2={node.right.x}
               y2={node.right.y}
               stroke={lineColor}
-              strokeWidth="3"
+              strokeWidth={lineWidth}
               className="transition-all duration-300"
               strokeLinecap="round"
             />
+            {/* Directional arrow */}
+            <polygon
+              points={`${arrowX},${arrowY} ${arrowX - unitX * 8 - unitY * 4},${arrowY - unitY * 8 + unitX * 4} ${arrowX - unitX * 8 + unitY * 4},${arrowY - unitY * 8 - unitX * 4}`}
+              fill={lineColor}
+              className="transition-all duration-300"
+            />
+            {/* "LARGER" label */}
+            <text
+              x={node.x + 15}
+              y={node.y + 15}
+              fill="#666"
+              fontSize="10"
+              fontWeight="bold"
+              className="transition-all duration-300"
+            >
+              &gt;
+            </text>
           </g>
         );
         elements.push(...renderNode(node.right));
@@ -272,24 +369,35 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
       const nodeColor = node.isSearchResult
         ? '#10b981' // green for search result
         : node.isHighlighted
-        ? '#f59e0b' // amber for highlighted
+        ? '#f59e0b' // amber for highlighted (currently comparing)
         : node.isVisited
-        ? '#8b5cf6' // purple for visited
+        ? '#8b5cf6' // purple for visited (part of path)
         : '#3b82f6'; // blue for default
 
       const nodeRadius = 30;
+      const isActive = node.isHighlighted || node.isVisited;
 
       elements.push(
         <g key={`node-${node.value}`} className="cursor-pointer">
+          {/* Main circle with enhanced styling */}
           <circle
             cx={node.x}
             cy={node.y}
             r={nodeRadius}
             fill={nodeColor}
             stroke="#ffffff"
-            strokeWidth="3"
+            strokeWidth={isActive ? "4" : "3"}
             className="transition-all duration-300"
+            style={{
+              filter: node.isHighlighted 
+                ? 'drop-shadow(0 0 20px rgba(245, 158, 11, 0.8))' 
+                : node.isVisited 
+                ? 'drop-shadow(0 0 15px rgba(139, 92, 246, 0.6))'
+                : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))'
+            }}
           />
+          
+          {/* Node value */}
           <text
             x={node.x}
             y={node.y}
@@ -299,20 +407,79 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
             fontSize="18"
             fontWeight="bold"
             className="transition-all duration-300"
+            style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
           >
             {node.value}
           </text>
+          
+          {/* Pulse animation for currently highlighted nodes */}
           {node.isHighlighted && (
+            <>
+              <circle
+                cx={node.x}
+                cy={node.y}
+                r={nodeRadius + 15}
+                fill="none"
+                stroke={nodeColor}
+                strokeWidth="3"
+                opacity="0.6"
+                className="animate-ping"
+              />
+              {/* Comparison indicator */}
+              <text
+                x={node.x}
+                y={node.y - 50}
+                textAnchor="middle"
+                fill="#f59e0b"
+                fontSize="14"
+                fontWeight="bold"
+                className="animate-bounce"
+              >
+                COMPARING
+              </text>
+            </>
+          )}
+          
+          {/* Path indicator for visited nodes */}
+          {node.isVisited && !node.isHighlighted && (
             <circle
               cx={node.x}
               cy={node.y}
-              r={nodeRadius + 10}
+              r={nodeRadius + 8}
               fill="none"
-              stroke={nodeColor}
+              stroke="#8b5cf6"
               strokeWidth="2"
-              opacity="0.6"
-              className="animate-ping"
+              opacity="0.8"
+              strokeDasharray="5,5"
+              className="transition-all duration-300"
             />
+          )}
+          
+          {/* Direction indicators */}
+          {isActive && (
+            <>
+              {/* Left arrow for smaller values */}
+              <g opacity="0.7">
+                <circle cx={node.x - 45} cy={node.y} r="12" fill="#e5e7eb" stroke="#9ca3af"/>
+                <text x={node.x - 45} y={node.y} textAnchor="middle" dy="0.35em" fontSize="12" fontWeight="bold" fill="#374151">
+                  &lt;
+                </text>
+                <text x={node.x - 45} y={node.y + 20} textAnchor="middle" fontSize="8" fill="#6b7280">
+                  smaller
+                </text>
+              </g>
+              
+              {/* Right arrow for larger values */}
+              <g opacity="0.7">
+                <circle cx={node.x + 45} cy={node.y} r="12" fill="#e5e7eb" stroke="#9ca3af"/>
+                <text x={node.x + 45} y={node.y} textAnchor="middle" dy="0.35em" fontSize="12" fontWeight="bold" fill="#374151">
+                  &gt;
+                </text>
+                <text x={node.x + 45} y={node.y + 20} textAnchor="middle" fontSize="8" fill="#6b7280">
+                  larger
+                </text>
+              </g>
+            </>
           )}
         </g>
       );
@@ -500,7 +667,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
           {/* Algorithm Log */}
           <div className="flex-1 p-4">
             <h3 className="text-lg font-semibold text-gray-700 mb-3">📋 Algorithm Log</h3>
-            <div className="space-y-1 max-h-40 overflow-y-auto bg-gray-50 p-3 rounded border text-xs">
+            <div className="space-y-1 max-h-52 overflow-y-auto bg-gray-50 p-3 rounded border text-xs">
               {animationLog.length === 0 ? (
                 <p className="text-gray-500">
                   Use the input field at the top to see algorithm steps...
