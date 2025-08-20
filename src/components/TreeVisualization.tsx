@@ -406,48 +406,121 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
         
         {/* Control panel */}
         <div className="w-80 bg-white shadow-lg border-l flex flex-col">
-          <div className="p-4 border-b">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Controls</h2>
-
-            {/* Input Section */}
-            <div className="space-y-3">
-              <Input
-                type="number"
-                placeholder="Enter number"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    handleInsert();
-                  }
-                }}
-                disabled={isAnimating}
-                className="w-full"
-              />
-              <div className="grid grid-cols-2 gap-2">
+          {/* Input Controls */}
+          <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              🎯 Tree Operations
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Enter a number to insert or search:
+                </label>
+                <Input
+                  type="number"
+                  placeholder="e.g., 42"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleInsert();
+                    }
+                  }}
+                  disabled={isAnimating}
+                  className="w-full text-lg py-3 border-2 border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-3">
                 <Button
                   onClick={handleInsert}
                   disabled={isAnimating || !inputValue}
                   variant="default"
-                  className="w-full"
+                  className="w-full font-semibold py-3 text-lg bg-blue-600 hover:bg-blue-700"
                 >
-                  Insert
+                  ➕ Insert Node
                 </Button>
                 <Button
                   onClick={handleSearch}
                   disabled={isAnimating || !inputValue || !tree}
                   variant="secondary"
-                  className="w-full"
+                  className="w-full font-semibold py-3 text-lg"
                 >
-                  Search
+                  🔍 Search Node
                 </Button>
               </div>
+              {isAnimating && (
+                <div className="text-center p-3 bg-blue-100 rounded-lg">
+                  <div className="text-blue-600 font-medium animate-pulse">
+                    🤖 Processing algorithm...
+                  </div>
+                </div>
+              )}
+              {!inputValue && !isAnimating && (
+                <div className="text-center text-sm text-gray-500 italic">
+                  💡 Enter a number above to get started
+                </div>
+              )}
             </div>
           </div>
           
+          {/* Quick Actions */}
+          <div className="p-4 border-b bg-green-50">
+            <h3 className="text-md font-semibold text-gray-700 mb-3">⚡ Quick Actions</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                onClick={() => {
+                  setInputValue('25');
+                  setTimeout(() => handleInsert(), 100);
+                }}
+                disabled={isAnimating}
+                variant="outline"
+                size="sm"
+                className="text-xs"
+              >
+                Add 25
+              </Button>
+              <Button
+                onClick={() => {
+                  setInputValue('75');
+                  setTimeout(() => handleInsert(), 100);
+                }}
+                disabled={isAnimating}
+                variant="outline"
+                size="sm"
+                className="text-xs"
+              >
+                Add 75
+              </Button>
+              <Button
+                onClick={() => {
+                  setInputValue('10');
+                  setTimeout(() => handleInsert(), 100);
+                }}
+                disabled={isAnimating}
+                variant="outline"
+                size="sm"
+                className="text-xs"
+              >
+                Add 10
+              </Button>
+              <Button
+                onClick={() => {
+                  setInputValue('90');
+                  setTimeout(() => handleInsert(), 100);
+                }}
+                disabled={isAnimating}
+                variant="outline"
+                size="sm"
+                className="text-xs"
+              >
+                Add 90
+              </Button>
+            </div>
+          </div>
+
           {/* Traversal Section */}
           <div className="p-4 border-b">
-            <h3 className="text-md font-semibold text-gray-700 mb-3">Tree Traversal</h3>
+            <h3 className="text-md font-semibold text-gray-700 mb-3">🌲 Tree Traversal</h3>
             <div className="space-y-2">
               <Button
                 onClick={() => handleTraversal('inorder')}
