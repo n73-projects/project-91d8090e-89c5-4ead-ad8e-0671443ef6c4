@@ -112,24 +112,24 @@ export class TreeNode {
     const leftSize = this.left ? this.getSubtreeSize(this.left) : 0;
     const rightSize = this.right ? this.getSubtreeSize(this.right) : 0;
     
-    // Dynamic spacing that increases with tree density
-    const minSpacing = 80;  // Minimum distance between nodes
-    const spacingMultiplier = Math.max(1, Math.sqrt(leftSize + rightSize) * 0.7);
+    // More compact spacing that still prevents overlaps
+    const minSpacing = 60;  // Reduced minimum distance
+    const spacingMultiplier = Math.max(1, Math.sqrt(leftSize + rightSize) * 0.4); // Reduced multiplier
     const effectiveSpacing = Math.max(minSpacing, baseSpacing * spacingMultiplier);
-    const verticalSpacing = 100; // Increased for better readability
+    const verticalSpacing = 80; // More compact vertical spacing
     
     if (this.left) {
-      // Calculate left position with enough space for the entire left subtree
-      const leftSpacing = effectiveSpacing * Math.max(1, Math.sqrt(leftSize) * 0.8);
+      // More compact left positioning
+      const leftSpacing = effectiveSpacing * Math.max(0.7, Math.sqrt(leftSize) * 0.5);
       const leftX = x - leftSpacing;
-      this.left.positionNodes(leftX, y + verticalSpacing, baseSpacing * 0.8);
+      this.left.positionNodes(leftX, y + verticalSpacing, baseSpacing * 0.85);
     }
 
     if (this.right) {
-      // Calculate right position with enough space for the entire right subtree
-      const rightSpacing = effectiveSpacing * Math.max(1, Math.sqrt(rightSize) * 0.8);
+      // More compact right positioning
+      const rightSpacing = effectiveSpacing * Math.max(0.7, Math.sqrt(rightSize) * 0.5);
       const rightX = x + rightSpacing;
-      this.right.positionNodes(rightX, y + verticalSpacing, baseSpacing * 0.8);
+      this.right.positionNodes(rightX, y + verticalSpacing, baseSpacing * 0.85);
     }
   }
 

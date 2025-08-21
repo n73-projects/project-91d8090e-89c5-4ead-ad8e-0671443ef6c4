@@ -38,11 +38,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
     root.insert(25);
     root.insert(35);
     root.insert(45);
-    root.insert(55);
-    root.insert(65);
-    root.insert(75);
-    root.insert(85);
-    root.calculatePositions(dimensions.width / 2, 80, Math.max(100, dimensions.width / 10));
+    root.calculatePositions(dimensions.width / 2, 80, Math.max(80, dimensions.width / 12));
     setTree(root);
   }, [dimensions]);
 
@@ -59,10 +55,10 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
   const calculateTreeBounds = (node: TreeNode | null): { minX: number, maxX: number, minY: number, maxY: number } => {
     if (!node) return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
 
-    let minX = node.x - 50; // Account for node radius and directional indicators
-    let maxX = node.x + 50;
-    let minY = node.y - 50;
-    let maxY = node.y + 50;
+    let minX = node.x - 35; // Account for node radius (30) + small buffer
+    let maxX = node.x + 35;
+    let minY = node.y - 35;
+    let maxY = node.y + 35;
 
     if (node.left) {
       const leftBounds = calculateTreeBounds(node.left);
@@ -91,7 +87,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
 
     if (!tree) {
       const newTree = new TreeNode(value);
-      newTree.calculatePositions(dimensions.width / 2, 80, Math.max(100, dimensions.width / 10));
+      newTree.calculatePositions(dimensions.width / 2, 80, Math.max(80, dimensions.width / 12));
       setTree(newTree);
       addAnimationLog(`Created root node with value: ${value}`);
     } else {
@@ -111,7 +107,7 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
       tree.insert(value);
       
       // Recalculate positions for the new tree structure
-      tree.calculatePositions(dimensions.width / 2, 80, Math.max(100, dimensions.width / 10));
+      tree.calculatePositions(dimensions.width / 2, 80, Math.max(80, dimensions.width / 12));
       
       // Clear all highlights and update the tree
       tree.clearHighlights();
@@ -552,11 +548,11 @@ export const TreeVisualization: React.FC<TreeVisualizationProps> = () => {
 
     // Calculate the bounds of the tree to optimize viewBox
     const bounds = calculateTreeBounds(tree);
-    const padding = 100;
-    const viewBoxX = Math.max(0, bounds.minX - padding);
-    const viewBoxY = Math.max(0, bounds.minY - padding);
-    const viewBoxWidth = Math.min(dimensions.width, bounds.maxX - bounds.minX + 2 * padding);
-    const viewBoxHeight = Math.min(dimensions.height, bounds.maxY - bounds.minY + 2 * padding);
+    const padding = 50; // Reduced padding
+    const viewBoxX = bounds.minX - padding;
+    const viewBoxY = bounds.minY - padding;
+    const viewBoxWidth = bounds.maxX - bounds.minX + 2 * padding;
+    const viewBoxHeight = bounds.maxY - bounds.minY + 2 * padding;
 
     return (
       <svg 
